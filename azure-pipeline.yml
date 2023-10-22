@@ -1,0 +1,30 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install pytest pytest-azurepipelines coverage
+  displayName: 'Install dependencies'
+
+- script: |
+    coverage run --source=src --branch -m pytest
+    coverage html
+    coverage xml -o coverage.xml
+  displayName: 'Run Tests with Code Coverage'
+
+- task: PublishCodeCoverageResults@2
+  inputs:
+    summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: 'htmlcov'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(Pipeline.Workspace)/coverage.zip'
+    replaceExistingArchive: true
